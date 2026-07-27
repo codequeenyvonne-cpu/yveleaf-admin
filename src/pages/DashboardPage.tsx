@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { BookOpen, Crown, Globe, Users, Wifi } from 'lucide-react'
-import { fetchAdminNovels, fetchAdminStats } from '../lib/api'
-import { loadSession } from '../lib/auth'
+import {
+  fetchAdminNovels,
+  fetchAdminStats,
+  fetchReadingInsights,
+  fetchSheetHealth,
+} from '../lib/api'
+import { clearSession, loadSession } from '../lib/auth'
 import { BRAND, IMAGES } from '../lib/brand'
-import type { Novel } from '../lib/types'
+import type { Novel, ReadingInsights } from '../lib/types'
 import { Badge } from '../components/Badge'
+import { ReadingHighlightsSection, SheetHealthBanner } from '../components/ReadingHighlights'
 import { BrandHeader } from '../components/yve/BrandHeader'
 import { FadeSlideIn } from '../components/yve/FadeSlideIn'
 import { YveCard, YveStatCard } from '../components/yve/YveCard'
@@ -17,21 +24,49 @@ function countBy<T extends string>(items: Novel[], pick: (n: Novel) => T) {
   }, {})
 }
 
+const emptyInsights: ReadingInsights = {
+  today: [],
+  top_all_time: [],
+  trend_7d: [],
+  highlights: [],
+}
+
 export function DashboardPage() {
+  const navigate = useNavigate()
   const [novels, setNovels] = useState<Novel[]>([])
   const [stats, setStats] = useState({ novels: 0, published: 0, users: 0 })
+  const [insights, setInsights] = useState<ReadingInsights>(emptyInsights)
+  const [sheetIssues, setSheetIssues] = useState<
+    Array<{ name: string; missingColumns: string[]; warnings: string[] }>
+  >([])
   const [error, setError] = useState('')
 
   useEffect(() => {
     const session = loadSession()
     if (!session) return
-    Promise.all([fetchAdminNovels(session.idToken), fetchAdminStats(session.idToken)])
-      .then(([novelList, adminStats]) => {
+    Promise.all([
+      fetchAdminNovels(session.idToken),
+      fetchAdminStats(session.idToken),
+      fetchReadingInsights(session.idToken),
+      fetchSheetHealth(session.idToken),
+    ])
+      .then(([novelList, adminStats, readingInsights, sheetHealth]) => {
         setNovels(novelList)
         setStats(adminStats)
+        setInsights(readingInsights)
+        setSheetIssues(
+          (sheetHealth.sheets ?? []).filter((s) => !s.ok || s.warnings.length > 0),
+        )
       })
-      .catch((e: Error) => setError(e.message))
+      .catch((e: Error) => {
+        if (e.message.toLowerCase().includes('invalid google token')) {
+          clearSession()
+        }
+        setError(e.message)
+      })
   }, [])
+
+  const sessionExpired = error.toLowerCase().includes('invalid google token')
 
   const access = countBy(novels, (n) => n.access_level)
   const featured = novels.filter((n) => n.featured).length
@@ -69,9 +104,20 @@ export function DashboardPage() {
 
       {error && (
         <div className="border-burgundy/20 bg-burgundy/5 text-burgundy rounded-xl border px-4 py-3 text-sm">
-          {error}
+          <p>{error}</p>
+          {sessionExpired && (
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
+              className="text-forest mt-3 font-bold underline"
+            >
+              Sign in again
+            </button>
+          )}
         </div>
       )}
+
+      {sheetIssues.length > 0 && <SheetHealthBanner issues={sheetIssues} />}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {cards.map(({ label, value, icon }, i) => (
@@ -80,6 +126,12 @@ export function DashboardPage() {
           </FadeSlideIn>
         ))}
       </div>
+
+      <ReadingHighlightsSection
+        today={insights.today ?? []}
+        trend7d={insights.trend_7d ?? []}
+        highlights={insights.highlights ?? []}
+      />
 
       <FadeSlideIn delay={450}>
         <YveCard className="p-5">

@@ -28,6 +28,44 @@ export interface AdminStats {
   users: number
 }
 
+export interface SheetHealthReport {
+  ok: boolean
+  sheets: Array<{
+    name: string
+    headerRow: number
+    missingColumns: string[]
+    warnings: string[]
+    ok: boolean
+  }>
+}
+
+export interface ReadingInsightBook {
+  novel_id: string
+  title: string
+  reader_count: number
+  session_count?: number
+}
+
+export interface ReadingHighlight {
+  title: string
+  reader_count: number
+  label: string
+}
+
+export interface ReadingTrendPoint {
+  date: string
+  novel_id: string
+  title: string
+  reader_count: number
+}
+
+export interface ReadingInsights {
+  today: ReadingInsightBook[]
+  top_all_time: Array<{ novel_id: string; title: string; total_readers: number }>
+  trend_7d: ReadingTrendPoint[]
+  highlights: ReadingHighlight[]
+}
+
 export interface AdminSession {
   email: string
   idToken: string

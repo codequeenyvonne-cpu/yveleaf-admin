@@ -1,5 +1,5 @@
 import { loadApiConfig } from './config'
-import type { AccessLevel, AdminStats, Novel, NovelStatus } from './types'
+import type { AccessLevel, AdminStats, Novel, NovelStatus, ReadingInsights, SheetHealthReport } from './types'
 
 export class ApiError extends Error {
   status: number
@@ -51,7 +51,14 @@ async function request<T>(
 
   const data = (await res.json().catch(() => ({}))) as { error?: string; ok?: boolean } & T
   if (!res.ok || data.error) {
-    throw new ApiError(data.error ?? `Request failed (${res.status})`, res.status)
+    const message = data.error ?? `Request failed (${res.status})`
+    if (
+      message.toLowerCase().includes('invalid google token') ||
+      message.toLowerCase().includes('missing authorization token')
+    ) {
+      throw new ApiError(`${message} — please sign out and sign in again.`, 401)
+    }
+    throw new ApiError(message, res.status)
   }
   return data
 }
@@ -127,4 +134,12 @@ export async function completeAdminUpload(token: string, uploadId: string) {
 
 export async function fetchAdminStats(token: string) {
   return request<AdminStats>('admin_stats', { token })
+}
+
+export async function fetchSheetHealth(token: string) {
+  return request<SheetHealthReport>('admin_sheet_health', { token })
+}
+
+export async function fetchReadingInsights(token: string) {
+  return request<ReadingInsights>('admin_reading_insights', { token })
 }

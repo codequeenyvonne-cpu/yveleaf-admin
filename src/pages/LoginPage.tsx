@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { Settings2 } from 'lucide-react'
 import { verifyAdmin } from '../lib/api'
-import { loadSession, saveSession } from '../lib/auth'
+import { clearSession, loadSession, saveSession } from '../lib/auth'
 import { BRAND, IMAGES } from '../lib/brand'
 import { loadApiConfig } from '../lib/config'
 import { GoogleSignInButton } from '../components/GoogleSignInButton'
@@ -14,13 +14,36 @@ import { YvePrimaryButton } from '../components/yve/YveButton'
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const existing = loadSession()
+  const [checkingSession, setCheckingSession] = useState(true)
+  const [sessionOk, setSessionOk] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { appsScriptUrl, googleClientId } = loadApiConfig()
   const setupComplete = Boolean(appsScriptUrl.trim() && googleClientId.trim())
 
-  if (existing) return <Navigate to="/" replace />
+  useEffect(() => {
+    const existing = loadSession()
+    if (!existing?.idToken) {
+      setCheckingSession(false)
+      return
+    }
+    verifyAdmin(existing.idToken)
+      .then(() => setSessionOk(true))
+      .catch(() => clearSession())
+      .finally(() => setCheckingSession(false))
+  }, [])
+
+  if (checkingSession) {
+    return (
+      <PageCurlBackground>
+        <p className="text-ink-soft flex min-h-screen items-center justify-center text-sm">
+          Checking sign-in…
+        </p>
+      </PageCurlBackground>
+    )
+  }
+
+  if (sessionOk) return <Navigate to="/" replace />
 
   async function handleGoogleSignIn(data: {
     credential: string
