@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-forest: #1b4332;
+  --color-forest-light: #2d6a4f;
+  --color-cream: #fbf6ea;
+  --color-cream-deep: #e8dfc8;
+  --color-gold: #c9a227;
+  --color-leaf: #40916c;
+  --color-surface: #fffef9;
+  --color-burgundy: #7b2d3b;
+  --font-display: 'Georgia', 'Times New Roman', serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+@layer components {
+  .field {
+    @apply border-cream-deep focus:border-leaf w-full rounded-xl border bg-white px-4 py-3 outline-none transition;
+  }
+}
