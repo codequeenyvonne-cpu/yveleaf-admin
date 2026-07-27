@@ -26,7 +26,7 @@ jobs:
       - run: npm ci
       - run: GITHUB_PAGES=true npm run build
         env:
-          VITE_APPS_SCRIPT_URL: https://script.google.com/macros/s/AKfycbxRrGtRQDSojiv1TFtdLZCZlXdq9BCceYFjhTVJ2-u9zPX2Tip7XWnefIIczAu6reOK/exec
+          VITE_APPS_SCRIPT_URL: https://script.google.com/macros/s/AKfycbxtTombJcU-38ulsfFHq8r7V35-DiVuw5IXa607ApcM2dRG2_z1bfv9mTF8J1AZ5iR7/exec
       - run: cp dist/index.html dist/404.html
       - uses: actions/upload-pages-artifact@v3
         with:
