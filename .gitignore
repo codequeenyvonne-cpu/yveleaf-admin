@@ -16,3 +16,6 @@ dist-ssr
 .env.local
 
 node_modules
+
+# Backend code stays local only — see ../App Script/
+backend/
