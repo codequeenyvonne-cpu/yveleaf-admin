@@ -20,7 +20,9 @@ async function request<T>(
 ): Promise<T> {
   const { appsScriptUrl } = loadApiConfig()
   if (!appsScriptUrl) {
-    throw new ApiError('Apps Script URL is not configured yet.')
+    throw new ApiError(
+      'Apps Script URL is not configured. Open Settings and paste your Web App URL ending in /exec',
+    )
   }
 
   const url = new URL(appsScriptUrl)

@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { loadSession } from './lib/auth'
+import { AdminProfilePage } from './pages/AdminProfilePage'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { NovelFormPage } from './pages/NovelFormPage'
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="novels" element={<NovelsPage />} />
           <Route path="novels/new" element={<NovelFormPage />} />
           <Route path="novels/:novelId" element={<NovelFormPage />} />
+          <Route path="profile" element={<AdminProfilePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

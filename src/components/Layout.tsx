@@ -1,5 +1,6 @@
-import { BookOpen, LayoutDashboard, LogOut, Settings } from 'lucide-react'
+import { BookOpen, LayoutDashboard, LogOut, Settings, UserRound } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { adminDisplayName } from '../lib/adminProfile'
 import { BRAND } from '../lib/brand'
 import { clearSession, loadSession } from '../lib/auth'
 import { BrandLogo } from './yve/BrandHeader'
@@ -8,6 +9,7 @@ import { PageCurlBackground } from './yve/PageCurlBackground'
 const nav = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/novels', label: 'Novels', icon: BookOpen },
+  { to: '/profile', label: 'Profile', icon: UserRound },
   { to: '/settings', label: 'Settings', icon: Settings },
 ]
 
@@ -58,7 +60,7 @@ export function Layout() {
           <div className="mt-auto hidden border-t border-cream/10 p-4 lg:block">
             <p className="text-cream/70 mb-1 truncate text-xs">{session?.email}</p>
             <p className="text-gold-soft mb-3 truncate text-sm font-bold">
-              {session?.name ?? 'Administrator'}
+              {adminDisplayName(session?.name)}
             </p>
             <button
               type="button"

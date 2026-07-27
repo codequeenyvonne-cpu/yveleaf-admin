@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { BookOpen, Crown, Globe, Users, Wifi } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { BookOpen, Crown, Globe, Sparkles, Users, Wifi } from 'lucide-react'
 import {
   fetchAdminNovels,
   fetchAdminStats,
   fetchReadingInsights,
   fetchSheetHealth,
 } from '../lib/api'
+import { adminDisplayName, loadAdminProfile } from '../lib/adminProfile'
 import { clearSession, loadSession } from '../lib/auth'
 import { BRAND, IMAGES } from '../lib/brand'
 import type { Novel, ReadingInsights } from '../lib/types'
 import { Badge } from '../components/Badge'
 import { ReadingHighlightsSection, SheetHealthBanner } from '../components/ReadingHighlights'
-import { BrandHeader } from '../components/yve/BrandHeader'
 import { FadeSlideIn } from '../components/yve/FadeSlideIn'
 import { YveCard, YveStatCard } from '../components/yve/YveCard'
 
@@ -24,6 +24,13 @@ function countBy<T extends string>(items: Novel[], pick: (n: Novel) => T) {
   }, {})
 }
 
+function formatJoinedDate(iso: string) {
+  if (!iso) return ''
+  const date = new Date(`${iso}T12:00:00`)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+}
+
 const emptyInsights: ReadingInsights = {
   today: [],
   top_all_time: [],
@@ -33,6 +40,8 @@ const emptyInsights: ReadingInsights = {
 
 export function DashboardPage() {
   const navigate = useNavigate()
+  const session = loadSession()
+  const profile = loadAdminProfile()
   const [novels, setNovels] = useState<Novel[]>([])
   const [stats, setStats] = useState({ novels: 0, published: 0, users: 0 })
   const [insights, setInsights] = useState<ReadingInsights>(emptyInsights)
@@ -40,33 +49,60 @@ export function DashboardPage() {
     Array<{ name: string; missingColumns: string[]; warnings: string[] }>
   >([])
   const [error, setError] = useState('')
+  const [partialWarning, setPartialWarning] = useState('')
 
   useEffect(() => {
-    const session = loadSession()
     if (!session) return
-    Promise.all([
+    Promise.allSettled([
       fetchAdminNovels(session.idToken),
       fetchAdminStats(session.idToken),
       fetchReadingInsights(session.idToken),
       fetchSheetHealth(session.idToken),
-    ])
-      .then(([novelList, adminStats, readingInsights, sheetHealth]) => {
-        setNovels(novelList)
-        setStats(adminStats)
-        setInsights(readingInsights)
-        setSheetIssues(
-          (sheetHealth.sheets ?? []).filter((s) => !s.ok || s.warnings.length > 0),
-        )
+    ]).then((results) => {
+      const labels = ['novels', 'stats', 'reading insights', 'sheet health'] as const
+      const failures: string[] = []
+
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          failures.push(labels[index])
+          if (index === 0) return
+        }
       })
-      .catch((e: Error) => {
-        if (e.message.toLowerCase().includes('invalid google token')) {
+
+      const novelsResult = results[0]
+      const statsResult = results[1]
+      const insightsResult = results[2]
+      const healthResult = results[3]
+
+      if (novelsResult.status === 'fulfilled') setNovels(novelsResult.value)
+      if (statsResult.status === 'fulfilled') setStats(statsResult.value)
+      if (insightsResult.status === 'fulfilled') setInsights(insightsResult.value)
+      if (healthResult.status === 'fulfilled') {
+        setSheetIssues(
+          (healthResult.value.sheets ?? []).filter((s) => !s.ok || s.warnings.length > 0),
+        )
+      }
+
+      const hardFailure = novelsResult.status === 'rejected' ? novelsResult.reason : null
+      if (hardFailure instanceof Error) {
+        if (hardFailure.message.toLowerCase().includes('invalid google token')) {
           clearSession()
         }
-        setError(e.message)
-      })
-  }, [])
+        setError(hardFailure.message)
+        return
+      }
+
+      if (failures.length) {
+        setPartialWarning(
+          `Some dashboard sections could not load (${failures.join(', ')}). Redeploy the latest Apps Script if reading charts or sheet health are missing.`,
+        )
+      }
+    })
+  }, [session])
 
   const sessionExpired = error.toLowerCase().includes('invalid google token')
+  const displayName = adminDisplayName(session?.name)
+  const joinedLabel = formatJoinedDate(profile.joinedDate)
 
   const access = countBy(novels, (n) => n.access_level)
   const featured = novels.filter((n) => n.featured).length
@@ -86,19 +122,39 @@ export function DashboardPage() {
   return (
     <div className="space-y-8">
       <FadeSlideIn>
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <BrandHeader
-            compact
-            title="Dashboard"
-            subtitle={`Manage ${BRAND.name} novels, access levels, and publishing.`}
-            showTagline
-          />
-          <img
-            src={IMAGES.bookshelf}
-            alt=""
-            className="mx-auto max-h-32 w-auto object-contain sm:max-h-36 lg:mx-0 lg:max-h-44"
-            aria-hidden
-          />
+        <div className="from-forest via-forest to-leaf relative overflow-hidden rounded-3xl bg-gradient-to-br px-6 py-7 text-cream shadow-[0_18px_40px_rgba(27,67,50,0.22)] sm:px-8">
+          <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-gold-soft flex items-center gap-2 text-xs font-bold tracking-[0.22em] uppercase">
+                <Sparkles className="size-3.5" />
+                Welcome back
+              </p>
+              <h1 className="font-display mt-2 text-3xl sm:text-4xl">{displayName}</h1>
+              <p className="text-cream/85 mt-3 text-sm leading-relaxed">
+                {profile.bio.trim() ||
+                  `Manage ${BRAND.name} novels, access levels, and publishing from one calm place.`}
+              </p>
+              <div className="text-cream/75 mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                {session?.email && <span>{session.email}</span>}
+                {profile.phone.trim() && <span>{profile.phone.trim()}</span>}
+                {joinedLabel && <span>Since {joinedLabel}</span>}
+              </div>
+              <Link
+                to="/profile"
+                className="text-gold-soft hover:text-cream mt-5 inline-flex text-sm font-bold underline-offset-2 hover:underline"
+              >
+                Edit admin profile →
+              </Link>
+            </div>
+            <img
+              src={IMAGES.welcome}
+              alt=""
+              className="mx-auto max-h-40 w-auto object-contain lg:mx-0 lg:max-h-48"
+              aria-hidden
+            />
+          </div>
+          <div className="pointer-events-none absolute -left-10 bottom-0 size-44 rounded-full bg-white/10 blur-2xl" />
+          <div className="pointer-events-none absolute -right-6 -top-8 size-36 rounded-full bg-gold/15 blur-2xl" />
         </div>
       </FadeSlideIn>
 
@@ -114,6 +170,12 @@ export function DashboardPage() {
               Sign in again
             </button>
           )}
+        </div>
+      )}
+
+      {partialWarning && !error && (
+        <div className="border-gold/30 bg-gold/10 text-forest rounded-xl border px-4 py-3 text-sm">
+          {partialWarning}
         </div>
       )}
 
@@ -136,6 +198,7 @@ export function DashboardPage() {
       <FadeSlideIn delay={450}>
         <YveCard className="p-5">
           <h2 className="font-display text-xl">Recent novels</h2>
+          <p className="text-ink-soft mt-1 text-sm">Latest updates across your catalog.</p>
           <div className="mt-4 space-y-3">
             {recent.map((novel) => (
               <div
