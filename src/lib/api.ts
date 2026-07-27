@@ -88,3 +88,39 @@ export async function deleteNovel(token: string, novelId: string) {
     body: { novel_id: novelId },
   })
 }
+
+export async function initAdminUpload(
+  token: string,
+  payload: {
+    filename: string
+    mimeType: string
+    total_parts: number
+    kind: string
+    novel_id?: string
+  },
+) {
+  return request<{ upload_id: string }>('admin_upload_init', {
+    method: 'POST',
+    token,
+    body: payload,
+  })
+}
+
+export async function uploadAdminFilePart(
+  token: string,
+  payload: { upload_id: string; index: number; data: string },
+) {
+  return request<{ ok: boolean; index: number }>('admin_upload_part', {
+    method: 'POST',
+    token,
+    body: payload,
+  })
+}
+
+export async function completeAdminUpload(token: string, uploadId: string) {
+  return request<{ drive_id: string; download_url: string }>('admin_upload_complete', {
+    method: 'POST',
+    token,
+    body: { upload_id: uploadId },
+  })
+}
