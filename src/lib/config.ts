@@ -2,10 +2,11 @@ const STORAGE_KEY = 'yveleaf_api_config'
 
 /** Official YveLeaf Apps Script deployment — used when Settings/env not filled in. */
 export const DEFAULT_APPS_SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbxtTombJcU-38ulsfFHq8r7V35-DiVuw5IXa607ApcM2dRG2_z1bfv9mTF8J1AZ5iR7/exec'
+  'https://script.google.com/macros/s/AKfycbxRrGtRQDSojiv1TFtdLZCZlXdq9BCceYFjhTVJ2-u9zPX2Tip7XWnefIIczAu6reOK/exec'
 
 const RETIRED_APPS_SCRIPT_URLS = [
   'https://script.google.com/macros/s/AKfycbzE7EDRTV2jVecGa9U6Q_AJJ2ENZyD-yPzKy6exxmgqEVhpabiK_1GFXq11HgLCnM3A/exec',
+  'https://script.google.com/macros/s/AKfycbxtTombJcU-38ulsfFHq8r7V35-DiVuw5IXa607ApcM2dRG2_z1bfv9mTF8J1AZ5iR7/exec',
 ]
 
 function normalizeUrl(raw: string | undefined | null) {
