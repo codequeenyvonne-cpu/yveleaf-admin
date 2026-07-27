@@ -30,15 +30,19 @@ VITE_GOOGLE_CLIENT_ID=YOUR_WEB_CLIENT_ID.apps.googleusercontent.com
 
 Or set these in **Settings** inside the admin UI.
 
-## Google setup
+## Google backend (local only — not in this repo)
 
-1. Create a Google Sheet for YveLeaf
-2. **Extensions → Apps Script** — paste `backend/apps-script/Code.gs`
-3. Set `ADMIN_EMAILS` to your Gmail
-4. **Deploy → New deployment → Web app** (Execute as: Me, Anyone)
-5. Google Cloud Console → OAuth Web client → authorized origin:
-   - `http://localhost:5173`
-   - `https://codequeenyvonne-cpu.github.io`
+Apps Script code lives on your computer in:
+
+**`../App Script/`** (next to the `yveleaf-admin` folder)
+
+1. Open **https://script.google.com** → New project
+2. Paste all 7 `.gs` files from that folder
+3. Run **`setupYveLeafEverything`** — creates Sheet + Drive automatically
+4. **Deploy → Web app** → paste URL in admin **Settings**
+5. Google Cloud Console → OAuth Web client → paste Client ID in **Settings**
+
+See **`App Script/README.md`** for full steps.
 
 ## Push to GitHub
 
