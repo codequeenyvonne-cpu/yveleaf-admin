@@ -19,6 +19,7 @@ export default function App() {
     <BrowserRouter basename={base.endsWith('/') ? base.slice(0, -1) : base || undefined}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route
           element={
             <Protected>
@@ -30,7 +31,6 @@ export default function App() {
           <Route path="novels" element={<NovelsPage />} />
           <Route path="novels/new" element={<NovelFormPage />} />
           <Route path="novels/:novelId" element={<NovelFormPage />} />
-          <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

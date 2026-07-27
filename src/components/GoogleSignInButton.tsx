@@ -61,13 +61,7 @@ export function GoogleSignInButton({
     }
   }, [googleClientId, onSuccess])
 
-  if (!googleClientId) {
-    return (
-      <p className="text-forest/70 rounded-xl border border-dashed border-cream-deep bg-surface px-4 py-3 text-sm">
-        Add your Google Client ID in Settings to enable sign-in.
-      </p>
-    )
-  }
+  if (!googleClientId) return null
 
   return <div ref={ref} className="flex justify-center" />
 }

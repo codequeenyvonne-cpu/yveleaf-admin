@@ -1,17 +1,21 @@
 import { useState } from 'react'
-import { Cloud, Settings2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Cloud, LogIn, Settings2 } from 'lucide-react'
 import { loadApiConfig, saveApiConfig } from '../lib/config'
 import { IMAGES } from '../lib/brand'
 import { BrandHeader } from '../components/yve/BrandHeader'
 import { FadeSlideIn } from '../components/yve/FadeSlideIn'
+import { PageCurlBackground } from '../components/yve/PageCurlBackground'
 import { YveFeatureCard } from '../components/yve/YveCard'
 import { YvePrimaryButton } from '../components/yve/YveButton'
 
 export function SettingsPage() {
+  const navigate = useNavigate()
   const initial = loadApiConfig()
   const [appsScriptUrl, setAppsScriptUrl] = useState(initial.appsScriptUrl)
   const [googleClientId, setGoogleClientId] = useState(initial.googleClientId)
   const [saved, setSaved] = useState(false)
+  const setupComplete = Boolean(appsScriptUrl.trim() && googleClientId.trim())
 
   function onSave(e: React.FormEvent) {
     e.preventDefault()
@@ -21,7 +25,13 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <PageCurlBackground>
+    <div className="mx-auto max-w-2xl space-y-8 px-4 py-8">
+      <div className="flex justify-center">
+        <YvePrimaryButton type="button" onClick={() => navigate('/login')}>
+          ← Back to sign in
+        </YvePrimaryButton>
+      </div>
       <FadeSlideIn>
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
           <img
@@ -75,12 +85,23 @@ export function SettingsPage() {
               Console.
             </p>
           </label>
-          <YvePrimaryButton type="submit" className="!mt-2">
+          <YvePrimaryButton type="submit" className="!mt-2 w-full">
             Save settings
           </YvePrimaryButton>
           {saved && <p className="text-leaf text-sm font-bold">Saved successfully.</p>}
+          {setupComplete && (
+            <YvePrimaryButton
+              type="button"
+              leadingIcon={LogIn}
+              className="!mt-2 w-full"
+              onClick={() => navigate('/login')}
+            >
+              Go to sign in
+            </YvePrimaryButton>
+          )}
         </form>
       </FadeSlideIn>
     </div>
+    </PageCurlBackground>
   )
 }

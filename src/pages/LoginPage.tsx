@@ -1,19 +1,24 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { Settings2 } from 'lucide-react'
 import { verifyAdmin } from '../lib/api'
 import { loadSession, saveSession } from '../lib/auth'
 import { BRAND, IMAGES } from '../lib/brand'
+import { loadApiConfig } from '../lib/config'
 import { GoogleSignInButton } from '../components/GoogleSignInButton'
 import { BrandHeader, BrandLogo } from '../components/yve/BrandHeader'
 import { FadeSlideIn } from '../components/yve/FadeSlideIn'
 import { GoldDivider } from '../components/yve/GoldDivider'
 import { PageCurlBackground } from '../components/yve/PageCurlBackground'
+import { YvePrimaryButton } from '../components/yve/YveButton'
 
 export function LoginPage() {
   const navigate = useNavigate()
   const existing = loadSession()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const { appsScriptUrl, googleClientId } = loadApiConfig()
+  const setupComplete = Boolean(appsScriptUrl.trim() && googleClientId.trim())
 
   if (existing) return <Navigate to="/" replace />
 
@@ -59,20 +64,54 @@ export function LoginPage() {
             <div className="mt-4 sm:mt-5">
               <BrandHeader
                 title={`${BRAND.name} Admin`}
-                subtitle="Sign in with the Google account that manages your library."
+                subtitle={
+                  setupComplete
+                    ? 'Sign in with the Google account that manages your library.'
+                    : 'First-time setup: connect your backend, then sign in with Google.'
+                }
                 showTagline
               />
             </div>
 
             <div className="mt-6 space-y-4 sm:mt-8">
-              <GoogleSignInButton onSuccess={handleGoogleSignIn} />
-              {loading && (
-                <p className="text-ink-soft text-center text-sm">Verifying access…</p>
-              )}
-              {error && (
-                <p className="text-burgundy bg-burgundy/5 rounded-xl px-4 py-3 text-center text-sm">
-                  {error}
-                </p>
+              {!setupComplete ? (
+                <>
+                  <div className="bg-surface rounded-xl border border-cream-deep px-4 py-3 text-sm leading-relaxed">
+                    <p className="text-ink font-bold">Setup required before sign-in</p>
+                    <ol className="text-ink-soft mt-2 list-decimal space-y-1 pl-5">
+                      <li>Paste your Apps Script URL in Settings</li>
+                      <li>Paste your Google OAuth Client ID in Settings</li>
+                      <li>Click Save, then come back here to sign in</li>
+                    </ol>
+                  </div>
+                  <YvePrimaryButton
+                    type="button"
+                    leadingIcon={Settings2}
+                    className="w-full"
+                    onClick={() => navigate('/settings')}
+                  >
+                    Open setup (Settings)
+                  </YvePrimaryButton>
+                </>
+              ) : (
+                <>
+                  <GoogleSignInButton onSuccess={handleGoogleSignIn} />
+                  {loading && (
+                    <p className="text-ink-soft text-center text-sm">Verifying access…</p>
+                  )}
+                  {error && (
+                    <p className="text-burgundy bg-burgundy/5 rounded-xl px-4 py-3 text-center text-sm">
+                      {error}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => navigate('/settings')}
+                    className="text-ink-soft hover:text-leaf mx-auto block text-xs underline-offset-2 hover:underline"
+                  >
+                    Edit connection settings
+                  </button>
+                </>
               )}
             </div>
 
