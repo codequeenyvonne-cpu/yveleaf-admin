@@ -3,7 +3,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { deleteNovel, fetchAdminNovels, saveNovel } from '../lib/api'
 import { loadSession } from '../lib/auth'
+import { IMAGES } from '../lib/brand'
 import type { AccessLevel, Novel, NovelStatus } from '../lib/types'
+import { BrandHeader } from '../components/yve/BrandHeader'
+import { FadeSlideIn } from '../components/yve/FadeSlideIn'
+import { YvePrimaryButton } from '../components/yve/YveButton'
+import { YveCard } from '../components/yve/YveCard'
 
 const accessLevels: { value: AccessLevel; label: string; hint: string }[] = [
   { value: 'offline', label: 'Offline', hint: 'Can be downloaded and read without internet.' },
@@ -86,20 +91,34 @@ export function NovelFormPage() {
   }
 
   if (loading) {
-    return <p className="text-forest/70">Loading novel…</p>
+    return <p className="text-ink-soft">Loading novel…</p>
   }
 
   return (
     <div className="space-y-6">
-      <Link to="/novels" className="text-forest/70 inline-flex items-center gap-2 text-sm hover:text-forest">
-        <ArrowLeft className="size-4" />
-        Back to novels
-      </Link>
+      <FadeSlideIn>
+        <Link
+          to="/novels"
+          className="text-leaf inline-flex items-center gap-2 text-sm font-bold hover:underline"
+        >
+          <ArrowLeft className="size-4" />
+          Back to novels
+        </Link>
 
-      <div>
-        <h1 className="font-display text-3xl">{isNew ? 'Add novel' : 'Edit novel'}</h1>
-        <p className="text-forest/70 mt-1">Upload files to Google Drive first, then paste the file IDs here.</p>
-      </div>
+        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <img
+            src={IMAGES.medallion}
+            alt=""
+            className="max-h-32 w-auto object-contain"
+            aria-hidden
+          />
+          <BrandHeader
+            compact
+            title={isNew ? 'Add novel' : 'Edit novel'}
+            subtitle="Upload files to Google Drive first, then paste the file IDs here."
+          />
+        </div>
+      </FadeSlideIn>
 
       {error && (
         <div className="border-burgundy/20 bg-burgundy/5 text-burgundy rounded-xl border px-4 py-3 text-sm">
@@ -108,7 +127,8 @@ export function NovelFormPage() {
       )}
 
       <form onSubmit={onSubmit} className="space-y-6">
-        <section className="border-cream-deep grid gap-4 rounded-2xl border bg-surface p-5 shadow-sm md:grid-cols-2">
+        <FadeSlideIn delay={100}>
+        <YveCard className="grid gap-4 p-5 md:grid-cols-2">
           <Field label="Title">
             <input
               required
@@ -149,9 +169,11 @@ export function NovelFormPage() {
               className="field resize-y"
             />
           </Field>
-        </section>
+        </YveCard>
+        </FadeSlideIn>
 
-        <section className="border-cream-deep grid gap-4 rounded-2xl border bg-surface p-5 shadow-sm md:grid-cols-2">
+        <FadeSlideIn delay={180}>
+        <YveCard className="grid gap-4 p-5 md:grid-cols-2">
           <Field label="Access level">
             <select
               value={form.access_level}
@@ -164,7 +186,7 @@ export function NovelFormPage() {
                 </option>
               ))}
             </select>
-            <p className="text-forest/60 mt-2 text-xs">
+            <p className="text-ink-soft mt-2 text-xs">
               {accessLevels.find((o) => o.value === form.access_level)?.hint}
             </p>
           </Field>
@@ -200,9 +222,11 @@ export function NovelFormPage() {
               className="field"
             />
           </Field>
-        </section>
+        </YveCard>
+        </FadeSlideIn>
 
-        <section className="border-cream-deep grid gap-4 rounded-2xl border bg-surface p-5 shadow-sm md:grid-cols-2">
+        <FadeSlideIn delay={260}>
+        <YveCard className="grid gap-4 p-5 md:grid-cols-2">
           <Field label="PDF Drive file ID">
             <input
               value={form.pdf_drive_id ?? ''}
@@ -226,17 +250,14 @@ export function NovelFormPage() {
               placeholder="id1,id2,id3"
             />
           </Field>
-        </section>
+        </YveCard>
+        </FadeSlideIn>
 
+        <FadeSlideIn delay={340}>
         <div className="flex flex-wrap gap-3">
-          <button
-            type="submit"
-            disabled={saving}
-            className="bg-forest text-cream inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold disabled:opacity-60"
-          >
-            <Save className="size-4" />
+          <YvePrimaryButton type="submit" disabled={saving} leadingIcon={Save} className="!w-auto px-8">
             {saving ? 'Saving…' : 'Save novel'}
-          </button>
+          </YvePrimaryButton>
           {!isNew && (
             <button
               type="button"
@@ -247,6 +268,7 @@ export function NovelFormPage() {
             </button>
           )}
         </div>
+        </FadeSlideIn>
       </form>
     </div>
   )
@@ -263,7 +285,7 @@ function Field({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-2 block text-sm font-semibold">{label}</span>
+      <span className="text-ink mb-2 block text-sm font-bold">{label}</span>
       {children}
     </label>
   )

@@ -1,16 +1,36 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('./assets/fonts/PlayfairDisplay-var.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nunito';
+  src: url('./assets/fonts/Nunito-var.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --color-forest: #1b4332;
-  --color-forest-light: #2d6a4f;
-  --color-cream: #fbf6ea;
-  --color-cream-deep: #e8dfc8;
+  --color-forest-deep: #0f2a1d;
+  --color-leaf: #2d6a4f;
+  --color-leaf-soft: #74a892;
   --color-gold: #c9a227;
-  --color-leaf: #40916c;
-  --color-surface: #fffef9;
-  --color-burgundy: #7b2d3b;
-  --font-display: 'Georgia', 'Times New Roman', serif;
-  --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --color-gold-soft: #e3c878;
+  --color-cream: #fbf6ea;
+  --color-cream-deep: #f3ead5;
+  --color-surface: #fffdf7;
+  --color-ink: #23281f;
+  --color-ink-soft: #6e6a5e;
+  --color-burgundy: #7d3b4c;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Nunito', system-ui, sans-serif;
 }
 
 html,
@@ -19,8 +39,50 @@ body,
   min-height: 100%;
 }
 
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 500;
+  background: var(--color-cream);
+  color: var(--color-forest);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--color-forest);
+}
+
 @layer components {
   .field {
-    @apply border-cream-deep focus:border-leaf w-full rounded-xl border bg-white px-4 py-3 outline-none transition;
+    @apply border-cream-deep focus:border-leaf w-full rounded-xl border bg-white px-4 py-3 text-ink outline-none transition;
   }
+
+  .yve-card {
+    @apply border-cream-deep rounded-[18px] border bg-surface shadow-[0_6px_14px_rgba(27,67,50,0.05)];
+  }
+
+  .yve-pill-btn {
+    @apply bg-forest text-cream inline-flex h-14 w-full items-center justify-center gap-2.5 rounded-[28px] text-base font-bold transition hover:bg-leaf disabled:opacity-50;
+  }
+
+  .yve-pill-outline {
+    @apply border-leaf-soft text-forest inline-flex h-14 w-full items-center justify-center gap-2 rounded-[27px] border bg-surface text-base font-bold transition hover:bg-cream-deep;
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: page-enter 0.55s cubic-bezier(0.33, 1, 0.68, 1) both;
 }
