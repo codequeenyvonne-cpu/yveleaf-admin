@@ -9,6 +9,10 @@ export class ApiError extends Error {
   }
 }
 
+function normalizeAppsScriptUrl(raw: string) {
+  return raw.trim().replace(/\/+$/, '')
+}
+
 async function request<T>(
   action: string,
   options: {
@@ -18,36 +22,52 @@ async function request<T>(
     query?: Record<string, string>
   } = {},
 ): Promise<T> {
-  const { appsScriptUrl } = loadApiConfig()
+  const { appsScriptUrl: rawUrl } = loadApiConfig()
+  const appsScriptUrl = normalizeAppsScriptUrl(rawUrl || '')
   if (!appsScriptUrl) {
     throw new ApiError(
       'Apps Script URL is not configured. Open Settings and paste your Web App URL ending in /exec',
     )
   }
 
-  const url = new URL(appsScriptUrl)
-  url.searchParams.set('action', action)
-  if (options.query) {
-    for (const [k, v] of Object.entries(options.query)) url.searchParams.set(k, v)
-  }
-
-  // Apps Script web apps reject CORS preflight (OPTIONS). Never send Authorization
-  // or application/json POST from the browser — pass the token in the query string.
-  if (options.token) url.searchParams.set('token', options.token)
-
-  if (options.method === 'POST' && options.body) {
-    url.searchParams.set('payload', JSON.stringify(options.body))
-  }
-
   let res: Response
   try {
-    res = await fetch(url.toString(), {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-    })
-  } catch {
+    if (options.method === 'POST' && options.body) {
+      // Form POST avoids:
+      // 1) CORS preflight (JSON POST is blocked by Apps Script)
+      // 2) GET URL length limits that break PDF/cover uploads
+      const form = new URLSearchParams()
+      form.set('action', action)
+      if (options.token) form.set('token', options.token)
+      if (options.query) {
+        for (const [k, v] of Object.entries(options.query)) form.set(k, v)
+      }
+      form.set('payload', JSON.stringify(options.body))
+
+      res = await fetch(appsScriptUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        },
+        body: form.toString(),
+      })
+    } else {
+      const url = new URL(appsScriptUrl)
+      url.searchParams.set('action', action)
+      if (options.query) {
+        for (const [k, v] of Object.entries(options.query)) url.searchParams.set(k, v)
+      }
+      if (options.token) url.searchParams.set('token', options.token)
+
+      res = await fetch(url.toString(), {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+      })
+    }
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err)
     throw new ApiError(
-      'Could not reach Apps Script. Check the Web App URL in Settings and confirm the deployment is set to Execute as Me and Anyone.',
+      `Could not reach Apps Script (${detail}). Open Settings, paste the Web App URL ending in /exec, then hard-refresh. Deployment must be Execute as Me + Anyone.`,
     )
   }
 
@@ -144,4 +164,9 @@ export async function fetchSheetHealth(token: string) {
 
 export async function fetchReadingInsights(token: string) {
   return request<ReadingInsights>('admin_reading_insights', { token })
+}
+
+/** Lightweight connectivity check used by Settings. */
+export async function pingAppsScript() {
+  return request<{ ok: boolean }>('health')
 }

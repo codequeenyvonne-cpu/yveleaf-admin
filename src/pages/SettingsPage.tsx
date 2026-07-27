@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Cloud, LogIn, Settings2 } from 'lucide-react'
-import { loadApiConfig, saveApiConfig } from '../lib/config'
+import { Cloud, LogIn, Settings2, Wifi } from 'lucide-react'
+import { pingAppsScript } from '../lib/api'
+import { DEFAULT_APPS_SCRIPT_URL, loadApiConfig, saveApiConfig } from '../lib/config'
 import { IMAGES } from '../lib/brand'
 import { BrandHeader } from '../components/yve/BrandHeader'
 import { FadeSlideIn } from '../components/yve/FadeSlideIn'
@@ -15,6 +16,9 @@ export function SettingsPage() {
   const [appsScriptUrl, setAppsScriptUrl] = useState(initial.appsScriptUrl)
   const [googleClientId, setGoogleClientId] = useState(initial.googleClientId)
   const [saved, setSaved] = useState(false)
+  const [testing, setTesting] = useState(false)
+  const [testMessage, setTestMessage] = useState('')
+  const [testOk, setTestOk] = useState<boolean | null>(null)
   const setupComplete = Boolean(appsScriptUrl.trim() && googleClientId.trim())
 
   function onSave(e: React.FormEvent) {
@@ -22,6 +26,27 @@ export function SettingsPage() {
     saveApiConfig({ appsScriptUrl: appsScriptUrl.trim(), googleClientId: googleClientId.trim() })
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function onTest() {
+    saveApiConfig({ appsScriptUrl: appsScriptUrl.trim(), googleClientId: googleClientId.trim() })
+    setTesting(true)
+    setTestMessage('')
+    setTestOk(null)
+    try {
+      const result = await pingAppsScript()
+      setTestOk(true)
+      setTestMessage(
+        result.ok
+          ? 'Connected successfully to Apps Script.'
+          : 'Reached Apps Script, but health check was not ok.',
+      )
+    } catch (err) {
+      setTestOk(false)
+      setTestMessage(err instanceof Error ? err.message : String(err))
+    } finally {
+      setTesting(false)
+    }
   }
 
   return (
@@ -71,6 +96,13 @@ export function SettingsPage() {
               placeholder="https://script.google.com/macros/s/…/exec"
               className="field"
             />
+            <button
+              type="button"
+              className="text-leaf mt-2 text-xs font-bold underline"
+              onClick={() => setAppsScriptUrl(DEFAULT_APPS_SCRIPT_URL)}
+            >
+              Use official YveLeaf Web App URL
+            </button>
           </label>
           <label className="block">
             <span className="text-ink mb-2 block text-sm font-bold">Google OAuth Client ID</span>
@@ -88,7 +120,20 @@ export function SettingsPage() {
           <YvePrimaryButton type="submit" className="!mt-2 w-full">
             Save settings
           </YvePrimaryButton>
+          <YvePrimaryButton
+            type="button"
+            leadingIcon={Wifi}
+            className="!mt-2 w-full"
+            onClick={onTest}
+          >
+            {testing ? 'Testing…' : 'Test connection'}
+          </YvePrimaryButton>
           {saved && <p className="text-leaf text-sm font-bold">Saved successfully.</p>}
+          {testMessage && (
+            <p className={`text-sm font-bold ${testOk ? 'text-leaf' : 'text-burgundy'}`}>
+              {testMessage}
+            </p>
+          )}
           {setupComplete && (
             <YvePrimaryButton
               type="button"
