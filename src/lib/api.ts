@@ -29,16 +29,25 @@ async function request<T>(
     for (const [k, v] of Object.entries(options.query)) url.searchParams.set(k, v)
   }
 
-  const headers: Record<string, string> = {
-    Accept: 'application/json',
-  }
-  if (options.token) headers.Authorization = `Bearer ${options.token}`
+  // Apps Script web apps reject CORS preflight (OPTIONS). Never send Authorization
+  // or application/json POST from the browser — pass the token in the query string.
+  if (options.token) url.searchParams.set('token', options.token)
 
-  const res = await fetch(url.toString(), {
-    method: options.method ?? 'GET',
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  })
+  if (options.method === 'POST' && options.body) {
+    url.searchParams.set('payload', JSON.stringify(options.body))
+  }
+
+  let res: Response
+  try {
+    res = await fetch(url.toString(), {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    })
+  } catch {
+    throw new ApiError(
+      'Could not reach Apps Script. Check the Web App URL in Settings and confirm the deployment is set to Execute as Me and Anyone.',
+    )
+  }
 
   const data = (await res.json().catch(() => ({}))) as { error?: string; ok?: boolean } & T
   if (!res.ok || data.error) {
