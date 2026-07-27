@@ -33,23 +33,23 @@ async function request<T>(
   let res: Response
   try {
     if (options.method === 'POST' && options.body) {
-      // Form POST avoids:
-      // 1) CORS preflight (JSON POST is blocked by Apps Script)
-      // 2) GET URL length limits that break PDF/cover uploads
-      const form = new URLSearchParams()
-      form.set('action', action)
-      if (options.token) form.set('token', options.token)
-      if (options.query) {
-        for (const [k, v] of Object.entries(options.query)) form.set(k, v)
+      // text/plain JSON avoids CORS preflight AND works with existing Apps Script
+      // doPost (JSON.parse of post body). Also avoids GET URL size limits on uploads.
+      const payload: Record<string, unknown> = {
+        ...options.body,
+        action,
       }
-      form.set('payload', JSON.stringify(options.body))
+      if (options.token) payload.token = options.token
+      if (options.query) {
+        for (const [k, v] of Object.entries(options.query)) payload[k] = v
+      }
 
       res = await fetch(appsScriptUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+          'Content-Type': 'text/plain;charset=UTF-8',
         },
-        body: form.toString(),
+        body: JSON.stringify(payload),
       })
     } else {
       const url = new URL(appsScriptUrl)
