@@ -52,7 +52,7 @@ export function DashboardPage() {
           <img
             src={IMAGES.bookshelf}
             alt=""
-            className="mx-auto max-h-44 w-auto object-contain lg:mx-0"
+            className="mx-auto max-h-32 w-auto object-contain sm:max-h-36 lg:mx-0 lg:max-h-44"
             aria-hidden
           />
         </div>

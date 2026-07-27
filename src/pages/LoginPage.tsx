@@ -41,22 +41,22 @@ export function LoginPage() {
 
   return (
     <PageCurlBackground>
-      <div className="flex min-h-screen flex-col items-center justify-center px-5 py-10 lg:flex-row lg:gap-10">
-        <FadeSlideIn className="mb-6 hidden max-w-sm lg:block">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-8 sm:px-5 sm:py-10 lg:flex-row lg:gap-10">
+        <FadeSlideIn className="w-full max-w-[280px] shrink-0 sm:max-w-sm lg:max-w-md">
           <img
             src={IMAGES.welcome}
             alt="Welcome to YveLeaf"
-            className="mx-auto max-h-[420px] w-auto object-contain drop-shadow-lg"
+            className="mx-auto max-h-[200px] w-full object-contain drop-shadow-lg sm:max-h-[260px] lg:max-h-[420px]"
           />
         </FadeSlideIn>
 
         <FadeSlideIn delay={120} className="w-full max-w-md">
-          <div className="yve-card border-gold/30 border-2 p-8 shadow-[0_16px_40px_rgba(27,67,50,0.12)]">
+          <div className="yve-card border-gold/30 border-2 p-6 shadow-[0_16px_40px_rgba(27,67,50,0.12)] sm:p-8">
             <div className="mx-auto flex justify-center">
-              <BrandLogo size={72} />
+              <BrandLogo size={64} />
             </div>
 
-            <div className="mt-5">
+            <div className="mt-4 sm:mt-5">
               <BrandHeader
                 title={`${BRAND.name} Admin`}
                 subtitle="Sign in with the Google account that manages your library."
@@ -64,7 +64,7 @@ export function LoginPage() {
               />
             </div>
 
-            <div className="mt-8 space-y-4">
+            <div className="mt-6 space-y-4 sm:mt-8">
               <GoogleSignInButton onSuccess={handleGoogleSignIn} />
               {loading && (
                 <p className="text-ink-soft text-center text-sm">Verifying access…</p>
@@ -76,7 +76,7 @@ export function LoginPage() {
               )}
             </div>
 
-            <div className="mt-8">
+            <div className="mt-6 sm:mt-8">
               <GoldDivider />
               <p className="text-ink-soft mt-4 text-center text-xs leading-relaxed">
                 Only approved administrator emails can access this portal.
