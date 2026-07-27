@@ -59,11 +59,29 @@ export interface ReadingTrendPoint {
   reader_count: number
 }
 
+export interface ReadingTotals {
+  pages_today: number
+  minutes_today: number
+  pages_lifetime: number
+  minutes_lifetime: number
+  minutes_today_label: string
+  minutes_lifetime_label: string
+}
+
+export interface WeekdayActivityPoint {
+  date: string
+  weekday: string
+  pages_read: number
+  minutes_read: number
+}
+
 export interface ReadingInsights {
   today: ReadingInsightBook[]
   top_all_time: Array<{ novel_id: string; title: string; total_readers: number }>
   trend_7d: ReadingTrendPoint[]
   highlights: ReadingHighlight[]
+  totals?: ReadingTotals
+  weekday_activity?: WeekdayActivityPoint[]
 }
 
 export interface AdminSession {

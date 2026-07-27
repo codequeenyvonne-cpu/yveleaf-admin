@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { BookOpen, Crown, Globe, Sparkles, Users, Wifi, CalendarDays, Infinity } from 'lucide-react'
+import { BookOpen, Crown, Globe, Sparkles, Users, Wifi, CalendarDays, Infinity, Clock3 } from 'lucide-react'
 import {
   fetchAdminNovels,
   fetchAdminStats,
@@ -36,6 +36,15 @@ const emptyInsights: ReadingInsights = {
   top_all_time: [],
   trend_7d: [],
   highlights: [],
+  totals: {
+    pages_today: 0,
+    minutes_today: 0,
+    pages_lifetime: 0,
+    minutes_lifetime: 0,
+    minutes_today_label: '0m',
+    minutes_lifetime_label: '0m',
+  },
+  weekday_activity: [],
 }
 
 export function DashboardPage() {
@@ -128,6 +137,11 @@ export function DashboardPage() {
   ]
 
   const readingCards = [
+    {
+      label: 'Reading time today',
+      value: insights.totals?.minutes_today_label || '0m',
+      icon: Clock3,
+    },
     { label: 'Readers today', value: readersToday, icon: CalendarDays },
     { label: 'Sessions today', value: sessionsToday, icon: Sparkles },
     { label: 'Lifetime book opens', value: lifetimeReaders, icon: Infinity },
@@ -209,7 +223,7 @@ export function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {readingCards.map(({ label, value, icon }, i) => (
           <FadeSlideIn key={label} delay={280 + i * 70}>
             <YveStatCard icon={icon} label={label} value={value} />
@@ -221,6 +235,8 @@ export function DashboardPage() {
         today={insights.today ?? []}
         trend7d={insights.trend_7d ?? []}
         highlights={insights.highlights ?? []}
+        totals={insights.totals}
+        weekdayActivity={insights.weekday_activity}
       />
 
       <FadeSlideIn delay={450}>

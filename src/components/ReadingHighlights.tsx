@@ -10,8 +10,14 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { TrendingUp } from 'lucide-react'
-import type { ReadingHighlight, ReadingInsightBook, ReadingTrendPoint } from '../lib/types'
+import { Clock3, TrendingUp } from 'lucide-react'
+import type {
+  ReadingHighlight,
+  ReadingInsightBook,
+  ReadingTotals,
+  ReadingTrendPoint,
+  WeekdayActivityPoint,
+} from '../lib/types'
 import { FadeSlideIn } from './yve/FadeSlideIn'
 import { YveCard } from './yve/YveCard'
 
@@ -53,17 +59,30 @@ export function ReadingHighlightsSection({
   today,
   trend7d,
   highlights,
+  totals,
+  weekdayActivity,
 }: {
   today: ReadingInsightBook[]
   trend7d: ReadingTrendPoint[]
   highlights: ReadingHighlight[]
+  totals?: ReadingTotals
+  weekdayActivity?: WeekdayActivityPoint[]
 }) {
-  const hasActivity = today.length > 0 || trend7d.length > 0
+  const hasActivity =
+    today.length > 0 ||
+    trend7d.length > 0 ||
+    (totals?.minutes_lifetime ?? 0) > 0 ||
+    (weekdayActivity ?? []).some((d) => d.pages_read > 0 || d.minutes_read > 0)
   const barData = today.slice(0, 5).map((b) => ({
     name: shortTitle(b.title),
     readers: b.reader_count,
   }))
   const { data: lineData, keys: lineKeys } = buildTrendSeries(trend7d)
+  const weekData = (weekdayActivity ?? []).map((d) => ({
+    label: d.weekday,
+    minutes: d.minutes_read,
+    pages: d.pages_read,
+  }))
 
   if (!hasActivity) {
     return (
@@ -88,6 +107,36 @@ export function ReadingHighlightsSection({
 
   return (
     <div className="space-y-6">
+      {totals && (
+        <FadeSlideIn delay={480}>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <YveCard className="border-gold/20 bg-gradient-to-br from-white/80 to-cream/60 p-4">
+              <div className="text-forest mb-2 inline-flex rounded-lg bg-forest/5 p-2">
+                <Clock3 className="size-4" />
+              </div>
+              <p className="text-ink-soft text-sm">Reading time today</p>
+              <p className="font-display mt-1 text-2xl">
+                {totals.minutes_today_label || '0m'}
+              </p>
+            </YveCard>
+            <YveCard className="border-gold/20 bg-gradient-to-br from-white/80 to-cream/60 p-4">
+              <p className="text-ink-soft text-sm">Pages today</p>
+              <p className="font-display mt-1 text-2xl">{totals.pages_today ?? 0}</p>
+            </YveCard>
+            <YveCard className="border-gold/20 bg-gradient-to-br from-white/80 to-cream/60 p-4">
+              <p className="text-ink-soft text-sm">Lifetime reading time</p>
+              <p className="font-display mt-1 text-2xl">
+                {totals.minutes_lifetime_label || '0m'}
+              </p>
+            </YveCard>
+            <YveCard className="border-gold/20 bg-gradient-to-br from-white/80 to-cream/60 p-4">
+              <p className="text-ink-soft text-sm">Lifetime pages</p>
+              <p className="font-display mt-1 text-2xl">{totals.pages_lifetime ?? 0}</p>
+            </YveCard>
+          </div>
+        </FadeSlideIn>
+      )}
+
       {highlights.length > 0 && (
         <FadeSlideIn delay={500}>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -105,45 +154,16 @@ export function ReadingHighlightsSection({
       )}
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <FadeSlideIn delay={560}>
+        <FadeSlideIn delay={540}>
           <YveCard className="p-5">
-            <h2 className="font-display text-xl">Most read today</h2>
-            <p className="text-ink-soft mb-4 text-sm">Unique readers per book today</p>
+            <h2 className="font-display text-xl">Day of week</h2>
+            <p className="text-ink-soft mb-4 text-sm">
+              Community pages and minutes over the last 7 days
+            </p>
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barData} margin={{ top: 8, right: 8, left: -16, bottom: 40 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f3ead5" />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: '#6e6a5e', fontSize: 11 }}
-                    interval={0}
-                    angle={-24}
-                    textAnchor="end"
-                    height={56}
-                  />
-                  <YAxis allowDecimals={false} tick={{ fill: '#6e6a5e', fontSize: 11 }} />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: 12,
-                      border: '1px solid #f3ead5',
-                      background: '#fffdf7',
-                    }}
-                  />
-                  <Bar dataKey="readers" fill="#1b4332" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </YveCard>
-        </FadeSlideIn>
-
-        <FadeSlideIn delay={620}>
-          <YveCard className="p-5">
-            <h2 className="font-display text-xl">7-day reader flow</h2>
-            <p className="text-ink-soft mb-4 text-sm">Daily unique readers for top books</p>
-            <div className="h-64">
-              {lineData.length > 0 ? (
+              {weekData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={lineData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                  <BarChart data={weekData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f3ead5" />
                     <XAxis dataKey="label" tick={{ fill: '#6e6a5e', fontSize: 11 }} />
                     <YAxis allowDecimals={false} tick={{ fill: '#6e6a5e', fontSize: 11 }} />
@@ -155,27 +175,96 @@ export function ReadingHighlightsSection({
                       }}
                     />
                     <Legend />
-                    {lineKeys.map((key, i) => (
-                      <Line
-                        key={key}
-                        type="monotone"
-                        dataKey={key}
-                        stroke={CHART_COLORS[i % CHART_COLORS.length]}
-                        strokeWidth={2}
-                        dot={{ r: 3 }}
-                      />
-                    ))}
-                  </LineChart>
+                    <Bar dataKey="minutes" name="Minutes" fill="#1b4332" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="pages" name="Pages" fill="#c9a227" radius={[6, 6, 0, 0]} />
+                  </BarChart>
                 </ResponsiveContainer>
               ) : (
                 <p className="text-ink-soft flex h-full items-center justify-center text-sm">
-                  Trend data builds up over several days of reading activity.
+                  Weekday activity appears after daily reading logs sync.
+                </p>
+              )}
+            </div>
+          </YveCard>
+        </FadeSlideIn>
+
+        <FadeSlideIn delay={560}>
+          <YveCard className="p-5">
+            <h2 className="font-display text-xl">Most read today</h2>
+            <p className="text-ink-soft mb-4 text-sm">Unique readers per book today</p>
+            <div className="h-64">
+              {barData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={barData} margin={{ top: 8, right: 8, left: -16, bottom: 40 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f3ead5" />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fill: '#6e6a5e', fontSize: 11 }}
+                      interval={0}
+                      angle={-24}
+                      textAnchor="end"
+                      height={56}
+                    />
+                    <YAxis allowDecimals={false} tick={{ fill: '#6e6a5e', fontSize: 11 }} />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 12,
+                        border: '1px solid #f3ead5',
+                        background: '#fffdf7',
+                      }}
+                    />
+                    <Bar dataKey="readers" fill="#1b4332" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-ink-soft flex h-full items-center justify-center text-sm">
+                  Book-level readers appear once novels are opened today.
                 </p>
               )}
             </div>
           </YveCard>
         </FadeSlideIn>
       </div>
+
+      <FadeSlideIn delay={620}>
+        <YveCard className="p-5">
+          <h2 className="font-display text-xl">7-day reader flow</h2>
+          <p className="text-ink-soft mb-4 text-sm">Daily unique readers for top books</p>
+          <div className="h-64">
+            {lineData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={lineData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3ead5" />
+                  <XAxis dataKey="label" tick={{ fill: '#6e6a5e', fontSize: 11 }} />
+                  <YAxis allowDecimals={false} tick={{ fill: '#6e6a5e', fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: 12,
+                      border: '1px solid #f3ead5',
+                      background: '#fffdf7',
+                    }}
+                  />
+                  <Legend />
+                  {lineKeys.map((key, i) => (
+                    <Line
+                      key={key}
+                      type="monotone"
+                      dataKey={key}
+                      stroke={CHART_COLORS[i % CHART_COLORS.length]}
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-ink-soft flex h-full items-center justify-center text-sm">
+                Trend data builds up over several days of reading activity.
+              </p>
+            )}
+          </div>
+        </YveCard>
+      </FadeSlideIn>
     </div>
   )
 }
