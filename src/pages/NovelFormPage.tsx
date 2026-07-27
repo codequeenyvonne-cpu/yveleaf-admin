@@ -6,6 +6,7 @@ import { deleteNovel, fetchAdminNovels, saveNovel } from '../lib/api'
 import { loadSession } from '../lib/auth'
 import { IMAGES } from '../lib/brand'
 import type { AccessLevel, Novel, NovelStatus } from '../lib/types'
+import { READING_STYLE_OPTIONS } from '../lib/types'
 import { uploadAdminFile } from '../lib/upload'
 import { BrandHeader } from '../components/yve/BrandHeader'
 import { FadeSlideIn } from '../components/yve/FadeSlideIn'
@@ -54,14 +55,18 @@ export function NovelFormPage() {
     author: '',
     genre: '',
     description: '',
+    publication_year: '',
     access_level: 'offline',
     status: 'draft',
     featured: true,
-    sort_order: 0,
+    sort_order: 1,
     pdf_drive_id: '',
     cover_drive_id: '',
     gallery_drive_ids: '',
     total_pages: 0,
+    default_reading_style: null,
+    allow_offline_download: true,
+    carousel_interval_sec: 5,
   })
   const [gallerySlots, setGallerySlots] = useState<GallerySlot[]>(
     Array.from({ length: MIN_GALLERY }, () => ({ driveId: '' })),
@@ -207,6 +212,11 @@ export function NovelFormPage() {
         access_level: form.access_level ?? 'offline',
         status: form.status ?? 'draft',
         gallery_drive_ids: joinGalleryIds(gallerySlots),
+        publication_year: form.publication_year ?? '',
+        default_reading_style: form.default_reading_style ?? null,
+        allow_offline_download: form.allow_offline_download !== false,
+        carousel_interval_sec: form.carousel_interval_sec ?? 5,
+        sort_order: form.sort_order ?? 1,
       })
       navigate('/novels')
     } catch (err) {
@@ -295,6 +305,17 @@ export function NovelFormPage() {
                   onChange={(e) => setForm({ ...form, genre: e.target.value })}
                   className="field"
                   placeholder="Romance, Drama…"
+                />
+              </Field>
+              <Field label="Publication year">
+                <input
+                  type="number"
+                  min={1800}
+                  max={2100}
+                  value={form.publication_year ?? ''}
+                  onChange={(e) => setForm({ ...form, publication_year: e.target.value })}
+                  className="field"
+                  placeholder="2024"
                 />
               </Field>
               <Field label="Total pages">
@@ -392,24 +413,11 @@ export function NovelFormPage() {
         </FadeSlideIn>
 
         <FadeSlideIn delay={320}>
-          <Section title="5. Publishing">
+          <Section
+            title="5. Visibility and access"
+            hint="Control where this novel appears in the app and whether readers can download it."
+          >
             <YveCard className="grid gap-4 p-5 md:grid-cols-2">
-              <Field label="Access level">
-                <select
-                  value={form.access_level}
-                  onChange={(e) => setForm({ ...form, access_level: e.target.value as AccessLevel })}
-                  className="field"
-                >
-                  {accessLevels.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-ink-soft mt-2 text-xs">
-                  {accessLevels.find((o) => o.value === form.access_level)?.hint}
-                </p>
-              </Field>
               <Field label="Status">
                 <select
                   value={form.status}
@@ -423,30 +431,123 @@ export function NovelFormPage() {
                   ))}
                 </select>
               </Field>
-              <Field label="Featured on home">
-                <label className="flex items-center gap-3 text-sm">
+              <Field label="Display priority">
+                <input
+                  type="number"
+                  min={1}
+                  value={form.sort_order ?? 1}
+                  onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })}
+                  className="field"
+                />
+                <p className="text-ink-soft mt-2 text-xs">
+                  1 = appears first in library and featured lists. 2 = second, and so on.
+                </p>
+              </Field>
+              <Field label="Home featured carousel" className="md:col-span-2">
+                <label className="flex items-start gap-3 text-sm">
                   <input
                     type="checkbox"
                     checked={!!form.featured}
                     onChange={(e) => setForm({ ...form, featured: e.target.checked })}
-                    className="size-4 accent-forest"
+                    className="mt-1 size-4 accent-forest"
                   />
-                  Show in featured carousel (needs cover + {MIN_GALLERY}+ gallery images)
+                  <span>
+                    Show in the animated home featured carousel
+                    <span className="text-ink-soft mt-1 block text-xs leading-relaxed">
+                      Requires cover + {MIN_GALLERY}+ gallery images. Uncheck to keep on the library
+                      shelf only.
+                    </span>
+                  </span>
                 </label>
               </Field>
-              <Field label="Sort order">
-                <input
-                  type="number"
-                  value={form.sort_order ?? 0}
-                  onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })}
+              <Field label="Access level">
+                <select
+                  value={form.access_level}
+                  onChange={(e) => {
+                    const access_level = e.target.value as AccessLevel
+                    setForm({
+                      ...form,
+                      access_level,
+                      allow_offline_download: access_level === 'offline',
+                    })
+                  }}
                   className="field"
-                />
+                >
+                  {accessLevels.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-ink-soft mt-2 text-xs">
+                  {accessLevels.find((o) => o.value === form.access_level)?.hint}
+                </p>
+              </Field>
+              <Field label="Offline download">
+                <label className="flex items-start gap-3 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.allow_offline_download !== false}
+                    onChange={(e) => setForm({ ...form, allow_offline_download: e.target.checked })}
+                    className="mt-1 size-4 accent-forest"
+                  />
+                  <span>
+                    Allow PDF download for offline reading
+                    <span className="text-ink-soft mt-1 block text-xs">
+                      Turn off for online-only streaming when sign-in is enabled later.
+                    </span>
+                  </span>
+                </label>
               </Field>
             </YveCard>
           </Section>
         </FadeSlideIn>
 
         <FadeSlideIn delay={380}>
+          <Section
+            title="6. Reader experience"
+            hint="Optional defaults when someone opens this novel in the app."
+          >
+            <YveCard className="grid gap-4 p-5 md:grid-cols-2">
+              <Field label="Suggested reading mode">
+                <select
+                  value={form.default_reading_style ?? ''}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      default_reading_style:
+                        e.target.value === '' ? null : Number(e.target.value),
+                    })
+                  }
+                  className="field"
+                >
+                  {READING_STYLE_OPTIONS.map((o) => (
+                    <option key={String(o.value)} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Featured carousel speed (seconds)">
+                <input
+                  type="number"
+                  min={3}
+                  max={30}
+                  value={form.carousel_interval_sec ?? 5}
+                  onChange={(e) =>
+                    setForm({ ...form, carousel_interval_sec: Number(e.target.value) })
+                  }
+                  className="field"
+                />
+                <p className="text-ink-soft mt-2 text-xs">
+                  How long each gallery image shows on the home featured card (default 5).
+                </p>
+              </Field>
+            </YveCard>
+          </Section>
+        </FadeSlideIn>
+
+        <FadeSlideIn delay={440}>
           <div className="flex flex-wrap gap-3">
             <YvePrimaryButton type="submit" disabled={busy} leadingIcon={Save} className="!w-auto px-8">
               {saving ? 'Saving…' : uploading ? 'Uploading…' : 'Save novel'}

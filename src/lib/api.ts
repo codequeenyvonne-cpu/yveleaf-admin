@@ -1,5 +1,5 @@
 import { loadApiConfig } from './config'
-import type { AccessLevel, Novel, NovelStatus } from './types'
+import type { AccessLevel, AdminStats, Novel, NovelStatus } from './types'
 
 export class ApiError extends Error {
   status: number
@@ -123,4 +123,8 @@ export async function completeAdminUpload(token: string, uploadId: string) {
     token,
     body: { upload_id: uploadId },
   })
+}
+
+export async function fetchAdminStats(token: string) {
+  return request<AdminStats>('admin_stats', { token })
 }
