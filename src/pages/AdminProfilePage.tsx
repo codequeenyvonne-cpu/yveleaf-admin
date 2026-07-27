@@ -41,7 +41,9 @@ export function AdminProfilePage() {
               <p className="text-gold-soft text-xs font-bold tracking-[0.22em] uppercase">
                 Administrator
               </p>
-              <h1 className="font-display mt-2 text-3xl sm:text-4xl">{greetingName}</h1>
+              <h1 className="font-display mt-2 text-3xl text-white sm:text-4xl">
+                {greetingName}
+              </h1>
               <p className="text-cream/85 mt-2 max-w-xl text-sm leading-relaxed">
                 {profile.bio.trim() ||
                   'Your admin profile appears on the dashboard welcome banner and sidebar.'}

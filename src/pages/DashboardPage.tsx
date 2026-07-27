@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { BookOpen, Crown, Globe, Sparkles, Users, Wifi } from 'lucide-react'
+import { BookOpen, Crown, Globe, Sparkles, Users, Wifi, CalendarDays, Infinity } from 'lucide-react'
 import {
   fetchAdminNovels,
   fetchAdminStats,
@@ -106,6 +106,18 @@ export function DashboardPage() {
 
   const access = countBy(novels, (n) => n.access_level)
   const featured = novels.filter((n) => n.featured).length
+  const readersToday = (insights.today ?? []).reduce(
+    (sum, book) => sum + Number(book.reader_count || 0),
+    0,
+  )
+  const sessionsToday = (insights.today ?? []).reduce(
+    (sum, book) => sum + Number(book.session_count || 0),
+    0,
+  )
+  const lifetimeReaders = (insights.top_all_time ?? []).reduce(
+    (sum, book) => sum + Number(book.total_readers || 0),
+    0,
+  )
 
   const cards = [
     { label: 'Total novels', value: stats.novels, icon: BookOpen },
@@ -113,6 +125,12 @@ export function DashboardPage() {
     { label: 'Featured', value: featured, icon: Crown },
     { label: 'Readers', value: stats.users, icon: Users },
     { label: 'Offline access', value: access.offline ?? 0, icon: Wifi },
+  ]
+
+  const readingCards = [
+    { label: 'Readers today', value: readersToday, icon: CalendarDays },
+    { label: 'Sessions today', value: sessionsToday, icon: Sparkles },
+    { label: 'Lifetime book opens', value: lifetimeReaders, icon: Infinity },
   ]
 
   const recent = [...novels]
@@ -129,7 +147,9 @@ export function DashboardPage() {
                 <Sparkles className="size-3.5" />
                 Welcome back
               </p>
-              <h1 className="font-display mt-2 text-3xl sm:text-4xl">{displayName}</h1>
+              <h1 className="font-display mt-2 text-3xl text-white sm:text-4xl">
+                {displayName}
+              </h1>
               <p className="text-cream/85 mt-3 text-sm leading-relaxed">
                 {profile.bio.trim() ||
                   `Manage ${BRAND.name} novels, access levels, and publishing from one calm place.`}
@@ -184,6 +204,14 @@ export function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {cards.map(({ label, value, icon }, i) => (
           <FadeSlideIn key={label} delay={100 + i * 80}>
+            <YveStatCard icon={icon} label={label} value={value} />
+          </FadeSlideIn>
+        ))}
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        {readingCards.map(({ label, value, icon }, i) => (
+          <FadeSlideIn key={label} delay={280 + i * 70}>
             <YveStatCard icon={icon} label={label} value={value} />
           </FadeSlideIn>
         ))}

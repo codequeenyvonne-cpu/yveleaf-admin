@@ -59,7 +59,7 @@ export function Layout() {
 
           <div className="mt-auto hidden border-t border-cream/10 p-4 lg:block">
             <p className="text-cream/70 mb-1 truncate text-xs">{session?.email}</p>
-            <p className="text-gold-soft mb-3 truncate text-sm font-bold">
+            <p className="text-cream mb-3 truncate text-sm font-bold">
               {adminDisplayName(session?.name)}
             </p>
             <button
