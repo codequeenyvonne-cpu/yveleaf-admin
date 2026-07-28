@@ -161,7 +161,7 @@ export function DashboardPage() {
                 <Sparkles className="size-3.5" />
                 Welcome back
               </p>
-              <h1 className="font-display mt-2 text-3xl text-white sm:text-4xl">
+              <h1 className="font-display mt-2 text-3xl font-bold !text-gold sm:text-4xl">
                 {displayName}
               </h1>
               <p className="text-cream/85 mt-3 text-sm leading-relaxed">
